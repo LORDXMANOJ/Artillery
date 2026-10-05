@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FP-155 Canard Steering Assembly — Digital Twin</title>
+  <meta name="description" content="Photoreal WebGL engineering digital twin of a 155 mm nose-guidance canard steering assembly.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=3">
+
+  <!-- Three.js r169 (ES modules) resolved through an import map; app.js loads them with dynamic import() -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="viewport" aria-label="3D viewport"></div>
+
+  <!-- Boot overlay -->
+  <div id="loader" class="loader">
+    <div class="loader-card">
+      <div class="loader-mark"></div>
+      <p class="loader-title">FP-155 DIGITAL TWIN</p>
+      <div class="loader-bar"><span id="loaderBar"></span></div>
+      <p id="loaderText" class="loader-text">Initializing…</p>
+    </div>
+  </div>
+
+  <!-- Apple Liquid Glass Top Navigation Bar -->
+  <header class="hud-header apple-glass-nav">
+    <div class="nav-left">
+      <button class="apple-glass-btn sidebar-toggle-btn" id="btnToggleSidebar" aria-label="Toggle Controls Sidebar" title="Toggle Sidebar (Tab)">
+        <svg class="apple-icon" viewBox="0 0 24 24" width="18" height="18">
+          <path fill="currentColor" d="M3 4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4zm2 0v16h5V4H5zm7 0v16h7V4h-7z"/>
+        </svg>
+      </button>
+      <div class="brand">
+        <div class="logo-indicator"></div>
+        <div class="brand-text">
+          <span class="project-id">FP-155 // PRECISION GUIDANCE KIT</span>
+          <h1>Canard Steering Assembly</h1>
+          <p class="subtitle">155 mm NATO Digital Twin &amp; Ballistic Fire Simulation</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Mode Switcher Segmented Control -->
+    <div class="apple-segmented" role="tablist" aria-label="Display Mode">
+      <button class="segment-btn active" id="tabTwinMode" role="tab" aria-selected="true">
+        <svg class="apple-icon" viewBox="0 0 24 24" width="15" height="15">
+          <path fill="currentColor" d="M12 2L2 7l10 5 10-5-10-5zm0 18l-8-4.5V9.5l8 4.5 8-4.5v6L12 20z"/>
+        </svg>
+        <span>Guidance Twin</span>
+      </button>
+      <button class="segment-btn" id="tabSimMode" role="tab" aria-selected="false">
+        <svg class="apple-icon" viewBox="0 0 24 24" width="15" height="15">
+          <path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/>
+        </svg>
+        <span>Artillery Fire Sim</span>
+      </button>
+    </div>
+
+    <!-- Right Action Items -->
+    <div class="nav-right">
+      <div class="header-actions">
+        <button class="apple-glass-btn pill-btn" id="btnTrajectory" aria-haspopup="dialog" aria-controls="modalTrajectory">
+          <span class="pip cyan"></span>Trajectory &amp; CEP
+        </button>
+        <button class="apple-glass-btn pill-btn" id="btnArchitecture" aria-haspopup="dialog" aria-controls="modalArchitecture">
+          <span class="pip amber"></span>System Arch
+        </button>
+      </div>
+      <div class="apple-status-island">
+        <div class="stat-pill"><span class="label">CALIBER</span><span class="value">Ø 155 MM</span></div>
+        <div class="stat-pill"><span class="label">SPIN ISO</span><span class="value accent">250 Hz</span></div>
+      </div>
+    </div>
+  </header>
+
+  <button class="panel-toggle" id="panelToggle" aria-controls="controlPanel" aria-expanded="true">Controls</button>
+
+  <!-- Left Liquid Glass Control Sidebar -->
+  <aside class="control-panel glass apple-sidebar" id="controlPanel">
+    <div class="panel-header">
+      <div class="panel-title-wrap">
+        <span class="apple-tag" id="sidebarCategoryTag">DIGITAL TWIN</span>
+        <h2 id="sidebarTitle">Component Controls</h2>
+      </div>
+      <button class="panel-close-btn" id="btnCloseSidebar" aria-label="Hide Sidebar" title="Hide Sidebar">✕</button>
+    </div>
+
+    <div class="sidebar-scrollable">
+      <!-- ── SECTION GROUP A: DIGITAL TWIN CONTROLS ── -->
+      <div id="sectionGroupTwin" class="section-group">
+        <section class="panel-section">
+          <h3>Exploded view</h3>
+          <div class="slider-group">
+            <label for="explodeSlider">Axial separation <span id="explodeVal">0%</span></label>
+            <input type="range" id="explodeSlider" min="0" max="100" value="0" step="1">
+          </div>
+          <div class="quick-views">
+            <button class="btn" data-explode="0">Assembled</button>
+            <button class="btn" data-explode="0.5">Partial</button>
+            <button class="btn" data-explode="1">Full stack</button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h3>CAD section analysis</h3>
+          <button class="btn btn-toggle" id="btnCut" aria-pressed="false"><span class="status-dot"></span>50% longitudinal section cut</button>
+          <div class="slider-group">
+            <label for="cutSlider">Cut plane offset <span id="cutVal">0.0 mm</span></label>
+            <input type="range" id="cutSlider" min="-100" max="100" value="0" step="1" disabled>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h3>Flight dynamics</h3>
+          <div class="toggle-grid">
+            <button class="btn btn-toggle" id="btnDeploy" aria-pressed="false"><span class="status-dot"></span>Canards deployed <kbd>D</kbd></button>
+            <button class="btn btn-toggle" id="btnSteer" aria-pressed="false"><span class="status-dot"></span>Closed-loop steering ±7.5° <kbd>S</kbd></button>
+            <button class="btn btn-toggle" id="btnRoll" aria-pressed="false"><span class="status-dot"></span>Roll decoupling · 250 Hz body <kbd>R</kbd></button>
+            <button class="btn btn-toggle" id="btnFlow" aria-pressed="false"><span class="status-dot"></span>Supersonic flow · M 2.2 <kbd>F</kbd></button>
+          </div>
+        </section>
+
+        <details class="panel-section avionics" id="avionicsPanel" open>
+          <summary><h3>Avionics &amp; sensor modes</h3><span class="lock-badge" id="cfgBadge">NO CONFIG</span></summary>
+          <div class="avionics-body">
+            <fieldset class="av-config" id="avConfig">
+              <div class="mode-tabs" role="radiogroup" aria-label="Sensor mode">
+                <button class="btn" role="radio" aria-checked="true" data-mode="prox">Proximity</button>
+                <button class="btn" role="radio" aria-checked="false" data-mode="time">Time delay</button>
+                <button class="btn" role="radio" aria-checked="false" data-mode="impact">Impact</button>
+              </div>
+
+              <div class="mode-pane" data-pane="prox">
+                <div class="slider-group">
+                  <label for="hobSlider">Radar height of burst <span id="hobVal">5.0 m AGL</span></label>
+                  <input type="range" id="hobSlider" min="2" max="15" value="5" step="0.1">
+                </div>
+                <dl class="readout">
+                  <div><dt>Sensor</dt><dd>24 GHz FMCW · B 250 MHz</dd></div>
+                  <div><dt>Range resolution</dt><dd id="fmcwRes">–</dd></div>
+                  <div><dt>Beat frequency @ HOB</dt><dd id="fmcwBeat">–</dd></div>
+                  <div><dt>Round-trip delay</dt><dd id="fmcwDelay">–</dd></div>
+                </dl>
+              </div>
+
+              <div class="mode-pane" data-pane="time" hidden>
+                <div class="timer-row">
+                  <label for="timerInput">Mission timer (ms)</label>
+                  <input type="number" id="timerInput" min="0" max="199999" step="1" value="71350" inputmode="numeric">
+                </div>
+                <dl class="readout">
+                  <div><dt>Function at</dt><dd id="timerVal">–</dd></div>
+                  <div><dt>Resolution</dt><dd>1 ms · digital counter</dd></div>
+                </dl>
+              </div>
+
+              <div class="mode-pane" data-pane="impact" hidden>
+                <div class="mode-tabs two" role="radiogroup" aria-label="Contact switch">
+                  <button class="btn" role="radio" aria-checked="true" data-impact="inst">Instantaneous</button>
+                  <button class="btn" role="radio" aria-checked="false" data-impact="delay">Delayed</button>
+                </div>
+                <dl class="readout">
+                  <div><dt>Deceleration threshold</dt><dd>&gt; 800 g</dd></div>
+                  <div><dt>Contact delay</dt><dd id="impactVal">–</dd></div>
+                </dl>
+              </div>
+            </fieldset>
+
+            <button class="btn btn-link" id="btnInductive">[ ⚡ SIMULATE INDUCTIVE DATA TRANSFER ]</button>
+            <div class="link-bar" aria-hidden="true"><span id="linkBar"></span></div>
+            <ol class="link-steps" id="linkSteps" aria-live="polite">
+              <li>100 kHz carrier lock</li>
+              <li>Target coordinates upload</li>
+              <li>CRC-16 checksum verified</li>
+              <li>Sensor configuration locked</li>
+            </ol>
+
+            <h4 class="av-sub">Safety interlock pipeline <span id="missionClock">T−</span></h4>
+            <div class="gate-bar" id="gateBar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+            <ol class="gates" id="gates" aria-live="polite">
+              <li>Safe</li>
+              <li>High-G sensed</li>
+              <li>Spin decoupling verified</li>
+              <li>Apogee sensing</li>
+              <li>Terminal ready</li>
+            </ol>
+            <button class="btn" id="btnSequence" disabled>▶ Simulate flight sequence</button>
+          </div>
+        </details>
+
+        <section class="panel-section">
+          <h3>Camera Preset</h3>
+          <div class="cam-buttons">
+            <button class="btn btn-small" data-view="iso">Iso <kbd>1</kbd></button>
+            <button class="btn btn-small" data-view="side">Profile <kbd>2</kbd></button>
+            <button class="btn btn-small" data-view="nose">Canards <kbd>3</kbd></button>
+            <button class="btn btn-small" data-view="aft">Thread <kbd>4</kbd></button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h3>Export &amp; Audio</h3>
+          <button class="btn btn-export" id="btnExport">↓ Export CAD mesh (.OBJ, mm)</button>
+          <button class="btn btn-toggle" id="btnAudio" aria-pressed="true"><span class="status-dot"></span>Synthesized audio FX</button>
+        </section>
+
+        <section class="panel-section">
+          <h3>Subsystems</h3>
+          <ul class="subsystem-list">
+            <li data-part="ogive" tabindex="0"><span class="color-pip" style="--pip:#9fb3c8"></span>Ogive cowling &amp; sapphire dome</li>
+            <li data-part="canards" tabindex="0"><span class="color-pip" style="--pip:#00e5ff"></span>Canard actuation assembly</li>
+            <li data-part="avionics" tabindex="0"><span class="color-pip" style="--pip:#ffb347"></span>Shock-encapsulated avionics</li>
+            <li data-part="power" tabindex="0"><span class="color-pip" style="--pip:#7ee0a1"></span>Power generation module</li>
+            <li data-part="bearing" tabindex="0"><span class="color-pip" style="--pip:#e2e6ea"></span>Ceramic roll-decoupling bearing</li>
+            <li data-part="base" tabindex="0"><span class="color-pip" style="--pip:#8d949c"></span>Threaded base interface</li>
+            <li data-part="body" tabindex="0"><span class="color-pip" style="--pip:#5d7566"></span>Flight vehicle outer body</li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- ── SECTION GROUP B: ARTILLERY FIRING SIMULATION CONTROLS ── -->
+      <div id="sectionGroupSim" class="section-group" style="display: none;">
+        <section class="panel-section sim-hero-card">
+          <button class="btn btn-fire-cannon" id="btnFireCannon">
+            <span class="fire-glow"></span>
+            <span class="fire-flame">💥</span>
+            <span class="fire-text">FIRE 155MM HOWITZER</span>
+          </button>
+          <div class="sim-phase-box">
+            <div class="phase-header">
+              <span class="sim-pulse-dot"></span>
+              <span class="sim-phase-tag" id="simFlightPhaseTag">READY ON FIRING LINE</span>
+            </div>
+            <p id="simPhaseDesc" class="sim-phase-desc">155mm howitzer charged. Gun elevated to 50°. Setback battery primed for 16,800 g launch shock.</p>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h3>Gun Elevation &amp; Charge</h3>
+          <div class="slider-group">
+            <label for="gunElevationSlider">Barrel Elevation <span id="gunElevationVal">50°</span></label>
+            <input type="range" id="gunElevationSlider" min="30" max="65" value="50" step="1">
+          </div>
+          <div class="charge-grid">
+            <button class="btn btn-charge" data-charge="3">Zone 3 (18 km)</button>
+            <button class="btn btn-charge" data-charge="4">Zone 4 (23 km)</button>
+            <button class="btn btn-charge active" data-charge="5">Zone 5 (28.5 km)</button>
+            <button class="btn btn-charge" data-charge="6">Zone 6 (32 km)</button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h3>Target Range &amp; Guidance</h3>
+          <div class="slider-group">
+            <label for="simRangeSlider">Downrange Distance <span id="simRangeVal">28.5 km</span></label>
+            <input type="range" id="simRangeSlider" min="15" max="32" value="28.5" step="0.5">
+          </div>
+          <button class="btn btn-toggle active" id="btnSimGuidance" aria-pressed="true">
+            <span class="status-dot"></span>
+            <span>Active Canard Homing (CEP 16.8 m)</span>
+          </button>
+        </section>
+
+        <section class="panel-section">
+          <h3>Tactical Camera</h3>
+          <div class="cam-buttons sim-cam-buttons">
+            <button class="btn btn-small active" data-simcam="follow">🚀 Follow Shell</button>
+            <button class="btn btn-small" data-simcam="gun">🎯 Gun Battery</button>
+            <button class="btn btn-small" data-simcam="tactical">🌐 Tactical Arc</button>
+            <button class="btn btn-small" data-simcam="target">💥 Target Zone</button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h3>Mission Timeline &amp; Playback</h3>
+          <div class="slider-group">
+            <label for="simScrubber">Flight Time <span id="simScrubberVal">0.0 s / 71.4 s</span></label>
+            <input type="range" id="simScrubber" min="0" max="71.4" value="0" step="0.1">
+          </div>
+          <div class="playback-controls">
+            <button class="btn" id="btnSimPlay">⏸ Pause</button>
+            <button class="btn" id="btnSimReset">↺ Reset</button>
+            <button class="btn btn-toggle" id="btnSimSlowMo"><span class="status-dot"></span>0.25x Slow-Mo</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Liquid Glass Inspection Sheet -->
+  <aside class="info-panel glass apple-sidebar-right" id="infoPanel">
+    <div class="info-header">
+      <div class="info-title-wrap">
+        <span class="info-tag" id="partCategory">SUBSYSTEM INSPECTION</span>
+        <h2 id="partTitle">Select a component</h2>
+      </div>
+      <button class="panel-close-btn" id="btnCloseInfo" aria-label="Close Inspection" title="Close Panel">✕</button>
+    </div>
+    <div class="info-body">
+      <p id="partDesc">Click any part in the viewport, or pick a subsystem from the list.</p>
+      <div class="specs-grid">
+        <div class="spec-item"><span class="spec-label">Material</span><span class="spec-value" id="specMaterial">–</span></div>
+        <div class="spec-item"><span class="spec-label">Finish / spec</span><span class="spec-value" id="specFinish">–</span></div>
+        <div class="spec-item"><span class="spec-label">Key parameter</span><span class="spec-value" id="specParam">–</span></div>
+        <div class="spec-item"><span class="spec-label">Function</span><span class="spec-value" id="specFunction">–</span></div>
+      </div>
+      <div class="engineering-notes">
+        <h4>Rendering notes</h4>
+        <p id="specNotes">–</p>
+      </div>
+    </div>
+    <div class="info-footer">Drag to orbit · Scroll to zoom · Right-drag to pan · <kbd>Space</kbd> action · <kbd>Tab</kbd> toggle sidebar</div>
+  </aside>
+
+  <!-- Live Dynamic Island Footer Telemetry -->
+  <footer class="hud-footer glass apple-liquid-dock">
+    <div class="status-indicator"><span class="live-pulse"></span><span id="dockModeLabel">TWIN</span></div>
+    
+    <!-- Twin telemetry stats -->
+    <div class="flight-data" id="twinTelemetry">
+      <span>CANARDS <strong id="tCanard">–</strong></span>
+      <span>δ PITCH / YAW <strong id="tDelta">–</strong></span>
+      <span>AFT BODY <strong id="tAft">–</strong></span>
+      <span>FWD ROLL <strong id="tFwd">–</strong></span>
+      <span>FLOW <strong id="tFlow">–</strong></span>
+      <span>SECTION <strong id="tCut">–</strong></span>
+    </div>
+
+    <!-- Sim telemetry stats -->
+    <div class="flight-data" id="simTelemetry" style="display: none;">
+      <span>PHASE <strong id="simTelePhase">READY</strong></span>
+      <span>RANGE <strong id="simTeleRange">0.00 km</strong></span>
+      <span>ALT <strong id="simTeleAlt">0 m AGL</strong></span>
+      <span>VELOCITY <strong id="simTeleVel">0 m/s</strong></span>
+      <span>MACH <strong id="simTeleMach">M 0.0</strong></span>
+      <span>G-LOAD <strong id="simTeleG">1.0 g</strong></span>
+      <span>SPIN <strong id="simTeleSpin">STATIC</strong></span>
+    </div>
+
+    <div class="fps"><strong id="tFps">–</strong> FPS</div>
+  </footer>
+
+  <!-- Trajectory & dispersion analysis -->
+  <dialog class="modal glass" id="modalTrajectory" aria-labelledby="modalTrajectoryTitle">
+    <header class="modal-header">
+      <div>
+        <span class="info-tag">FLIGHT DYNAMICS // GUIDANCE ACCURACY</span>
+        <h2 id="modalTrajectoryTitle">Trajectory &amp; dispersion analysis</h2>
+      </div>
+      <div class="modal-stats">
+        <span>V₀ <strong>892 m/s</strong></span>
+        <span>SETBACK <strong>16,800 g</strong></span>
+        <span>ROLL <strong>260 Hz → &lt; 5 Hz</strong></span>
+        <span>TOF <strong>71.4 s</strong></span>
+      </div>
+      <button class="btn modal-close" id="btnTrajectoryClose" aria-label="Close analysis">✕ <kbd>Esc</kbd></button>
+    </header>
+    <div class="modal-body">
+      <figure class="plot">
+        <figcaption><h3>Trajectory profile</h3><span>Ground range 0 – 30 km · altitude 0 – 10 km AGL</span></figcaption>
+        <canvas id="cvTrajectory" role="img" aria-label="Range versus altitude plot of the unguided and canard-corrected trajectories with flight milestones"></canvas>
+        <div class="plot-legend">
+          <span><i class="key key-amber"></i>Unguided ballistic · atmospheric drift</span>
+          <span><i class="key key-cyan"></i>Active canard-corrected</span>
+          <span class="note">Downrange deviation drawn ×12 on the main plot; inset is true scale</span>
+        </div>
+      </figure>
+      <figure class="plot">
+        <figcaption><h3>Terminal target dispersion</h3><span>Monte Carlo scatter · √r radial scale</span></figcaption>
+        <canvas id="cvDispersion" role="img" aria-label="Polar scatter plot of 50 unguided and 50 guided impact points around the target"></canvas>
+        <div class="specs-grid readout-box">
+          <div class="spec-item"><span class="spec-label">Sample</span><span class="spec-value" id="mcRuns">–</span></div>
+          <div class="spec-item"><span class="spec-label">Guided CEP</span><span class="spec-value" id="mcGuided">–</span></div>
+          <div class="spec-item"><span class="spec-label">Unguided CEP</span><span class="spec-value" id="mcUnguided">–</span></div>
+          <div class="spec-item"><span class="spec-label">R95 (guided)</span><span class="spec-value" id="mcR95">–</span></div>
+        </div>
+      </figure>
+    </div>
+  </dialog>
+
+  <!-- System architecture & avionics diagram modal -->
+  <dialog class="modal glass modal-arch" id="modalArchitecture" aria-labelledby="modalArchitectureTitle">
+    <header class="modal-header">
+      <div>
+        <span class="info-tag">SYSTEM ARCHITECTURE // ELECTRONICS &amp; GNC BLOCK DIAGRAM</span>
+        <h2 id="modalArchitectureTitle">Avionics Architecture, GNC &amp; SWaP-C Specification</h2>
+      </div>
+      <div class="modal-stats">
+        <span>CORE <strong>Dual Cortex-R / DSP</strong></span>
+        <span>POWER <strong>28V RAT + Reserve Batt</strong></span>
+        <span>BUS <strong>CAN-FD / SPI (10 Mbps)</strong></span>
+        <span>SWaP <strong>1.42 kg · &lt; 18 W</strong></span>
+      </div>
+      <button class="btn modal-close" id="btnArchitectureClose" aria-label="Close architecture">✕ <kbd>Esc</kbd></button>
+    </header>
+    <div class="modal-body arch-modal-body">
+      <!-- Architecture Block Diagram -->
+      <figure class="plot arch-figure">
+        <figcaption>
+          <h3>Electronics &amp; Subsystem Block Diagram</h3>
+          <span>Full signal, bus, and power routing architecture</span>
+        </figcaption>
+        <div class="arch-diagram-wrapper">
+          <svg class="arch-svg" viewBox="0 0 860 480" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="gradPower" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffb347" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#ffb347" stop-opacity="0.08"/>
+              </linearGradient>
+              <linearGradient id="gradCore" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="#00e5ff" stop-opacity="0.08"/>
+              </linearGradient>
+              <linearGradient id="gradSensors" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#3dffb0" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#3dffb0" stop-opacity="0.08"/>
+              </linearGradient>
+              <linearGradient id="gradActuators" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.08"/>
+              </linearGradient>
+              <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 8 5 L 0 9 z" fill="#00e5ff"/>
+              </marker>
+              <marker id="arrowAmber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 8 5 L 0 9 z" fill="#ffb347"/>
+              </marker>
+            </defs>
+
+            <!-- Group 1: Power Subsystem -->
+            <g class="block-group">
+              <rect x="20" y="24" width="220" height="200" rx="10" fill="url(#gradPower)" stroke="#ffb347" stroke-width="1.2"/>
+              <text x="35" y="48" fill="#ffb347" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600" letter-spacing="1">POWER SUBSYSTEM</text>
+              
+              <!-- Power components -->
+              <rect x="35" y="65" width="190" height="38" rx="6" fill="#0d141e" stroke="rgba(255,179,71,0.4)" stroke-width="1"/>
+              <text x="45" y="82" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">Setback Reserve Batt</text>
+              <text x="45" y="95" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">Thermal Shock-Activated</text>
+
+              <rect x="35" y="112" width="190" height="38" rx="6" fill="#0d141e" stroke="rgba(255,179,71,0.4)" stroke-width="1"/>
+              <text x="45" y="129" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">Ram-Air Turbine (RAT)</text>
+              <text x="45" y="142" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">8-Blade · Active M &gt; 1.2</text>
+
+              <rect x="35" y="159" width="190" height="52" rx="6" fill="#0d141e" stroke="#ffb347" stroke-width="1"/>
+              <text x="45" y="177" fill="#ffb347" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600">PMU (Power Conditioning)</text>
+              <text x="45" y="191" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="9.5">28V Rail (BLDC) · 5V / 3.3V</text>
+              <text x="45" y="203" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="8.5">Capacitor Buffer (18 W peak)</text>
+            </g>
+
+            <!-- Group 2: Sensors Subsystem -->
+            <g class="block-group">
+              <rect x="20" y="250" width="220" height="206" rx="10" fill="url(#gradSensors)" stroke="#3dffb0" stroke-width="1.2"/>
+              <text x="35" y="274" fill="#3dffb0" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600" letter-spacing="1">NAVIGATION SENSORS</text>
+
+              <rect x="35" y="288" width="190" height="42" rx="6" fill="#0d141e" stroke="rgba(61,255,176,0.4)" stroke-width="1"/>
+              <text x="45" y="306" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">6-DOF High-G MEMS IMU</text>
+              <text x="45" y="320" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">±20,000 g survivable · SPI</text>
+
+              <rect x="35" y="338" width="190" height="42" rx="6" fill="#0d141e" stroke="rgba(61,255,176,0.4)" stroke-width="1"/>
+              <text x="45" y="356" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">Anti-Jam GNSS Receiver</text>
+              <text x="45" y="370" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">Dual-Frequency · RF Shielded</text>
+
+              <rect x="35" y="388" width="190" height="52" rx="6" fill="#0d141e" stroke="rgba(61,255,176,0.4)" stroke-width="1"/>
+              <text x="45" y="406" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">24 GHz FMCW Radar / Baro</text>
+              <text x="45" y="420" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">Sapphire Window Aperture</text>
+              <text x="45" y="432" fill="#3dffb0" font-family="'Inter', sans-serif" font-size="8.5">Height-of-Burst (HOB: 2-15m)</text>
+            </g>
+
+            <!-- Group 3: Central GNC Flight Computer (Middle Core) -->
+            <g class="block-group">
+              <rect x="310" y="70" width="250" height="340" rx="12" fill="url(#gradCore)" stroke="#00e5ff" stroke-width="1.8"/>
+              <text x="325" y="98" fill="#00e5ff" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="700" letter-spacing="1">GNC FLIGHT COMPUTER</text>
+              <text x="325" y="114" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9.5">Dual Lockstep Real-Time Processing</text>
+
+              <!-- Algorithmic Modules inside Flight Computer -->
+              <rect x="325" y="130" width="220" height="55" rx="6" fill="#0d141e" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+              <text x="338" y="150" fill="#00e5ff" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">15-State EKF Navigation</text>
+              <text x="338" y="165" fill="#eef3f8" font-family="'Inter', sans-serif" font-size="9">GNSS/IMU Sensor Fusion (200 Hz)</text>
+              <text x="338" y="177" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="8.5">Bias, Covariance &amp; Drift Nulling</text>
+
+              <rect x="325" y="195" width="220" height="55" rx="6" fill="#0d141e" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+              <text x="338" y="215" fill="#00e5ff" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">Guidance Law (APN)</text>
+              <text x="338" y="230" fill="#eef3f8" font-family="'Inter', sans-serif" font-size="9">Augmented Proportional Navigation</text>
+              <text x="338" y="242" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="8.5">Trajectory Correction: CEP ≤ 30 m</text>
+
+              <rect x="325" y="260" width="220" height="55" rx="6" fill="#0d141e" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+              <text x="338" y="280" fill="#00e5ff" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">Roll Decoupling &amp; Control</text>
+              <text x="338" y="295" fill="#eef3f8" font-family="'Inter', sans-serif" font-size="9">250 Hz Body Spin De-coupling</text>
+              <text x="338" y="307" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="8.5">Fin Mixer Matrix (Pitch/Yaw: ±7.5°)</text>
+
+              <rect x="325" y="325" width="220" height="68" rx="6" fill="#0d141e" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+              <text x="338" y="345" fill="#00e5ff" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">Safety &amp; Arming Logic</text>
+              <text x="338" y="360" fill="#eef3f8" font-family="'Inter', sans-serif" font-size="9">Dual Interlock: Setback + Spin</text>
+              <text x="338" y="372" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="8.5">Multi-Mode Trigger (Prox/Time/Impact)</text>
+              <text x="338" y="384" fill="#ffb347" font-family="'Inter', sans-serif" font-size="8.5">STANAG 4369 Pre-Fire Configuration</text>
+            </g>
+
+            <!-- Group 4: Canard Actuation Assembly (CAA) -->
+            <g class="block-group">
+              <rect x="630" y="70" width="210" height="220" rx="10" fill="url(#gradActuators)" stroke="#a78bfa" stroke-width="1.2"/>
+              <text x="645" y="94" fill="#a78bfa" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600" letter-spacing="1">CANARD ACTUATION (CAA)</text>
+
+              <rect x="645" y="110" width="180" height="46" rx="6" fill="#0d141e" stroke="rgba(167,139,250,0.4)" stroke-width="1"/>
+              <text x="655" y="128" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">4x BLDC Motor Drivers</text>
+              <text x="655" y="142" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">PWM H-Bridge · 28V Bus</text>
+
+              <rect x="645" y="164" width="180" height="46" rx="6" fill="#0d141e" stroke="rgba(167,139,250,0.4)" stroke-width="1"/>
+              <text x="655" y="182" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">Magnetic Angle Encoders</text>
+              <text x="655" y="196" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">14-bit Absolute Position Loop</text>
+
+              <rect x="645" y="218" width="180" height="58" rx="6" fill="#0d141e" stroke="#a78bfa" stroke-width="1"/>
+              <text x="655" y="238" fill="#a78bfa" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600">4x Titanium Canards</text>
+              <text x="655" y="252" fill="#eef3f8" font-family="'Inter', sans-serif" font-size="9">Spring Unlatch + Servo Deflection</text>
+              <text x="655" y="266" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="8.5">±7.5° Mechanical Fin Travel</text>
+            </g>
+
+            <!-- Group 5: Pre-Flight Induction Interface -->
+            <g class="block-group">
+              <rect x="630" y="310" width="210" height="146" rx="10" fill="rgba(12,17,25,0.85)" stroke="rgba(160,200,230,0.3)" stroke-width="1"/>
+              <text x="645" y="334" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="600">PRE-FIRE SETTER LINK</text>
+
+              <rect x="645" y="348" width="180" height="44" rx="6" fill="#0d141e" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+              <text x="655" y="366" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">100 kHz Resonant Coil</text>
+              <text x="655" y="380" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">Contactless Nose Induction</text>
+
+              <rect x="645" y="398" width="180" height="46" rx="6" fill="#0d141e" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+              <text x="655" y="416" fill="#eef3f8" font-family="'JetBrains Mono', monospace" font-size="10">STANAG 4369 Protocol</text>
+              <text x="655" y="430" fill="#9aa9bb" font-family="'Inter', sans-serif" font-size="9">Ephemeris, Mode &amp; CRC-16</text>
+            </g>
+
+            <!-- Routing Arrows / Busses -->
+            <!-- Power to Core -->
+            <path d="M 225 185 L 310 185" stroke="#ffb347" stroke-width="1.8" fill="none" marker-end="url(#arrowAmber)"/>
+            <!-- Power to Actuators -->
+            <path d="M 225 185 Q 267 185 267 50 T 600 50 L 630 115" stroke="#ffb347" stroke-width="1.6" stroke-dasharray="4,3" fill="none"/>
+            <text x="270" y="44" fill="#ffb347" font-family="'JetBrains Mono', monospace" font-size="8.5">28V MOTOR BUS</text>
+
+            <!-- Sensors to Core -->
+            <path d="M 225 350 L 310 350" stroke="#3dffb0" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+            <text x="235" y="342" fill="#3dffb0" font-family="'JetBrains Mono', monospace" font-size="8.5">SPI / CAN-FD</text>
+
+            <!-- Core to Actuators -->
+            <path d="M 560 210 L 630 210" stroke="#00e5ff" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+            <text x="568" y="202" fill="#00e5ff" font-family="'JetBrains Mono', monospace" font-size="8.5">PWM / SERVO</text>
+
+            <!-- Setter to Core -->
+            <path d="M 630 380 L 560 380" stroke="rgba(160,200,230,0.5)" stroke-width="1.6" stroke-dasharray="3,3" fill="none"/>
+            <text x="572" y="372" fill="#9aa9bb" font-family="'JetBrains Mono', monospace" font-size="8.5">INDUCTIVE</text>
+          </svg>
+        </div>
+      </figure>
+
+      <!-- SWaP-C & Engineering Specification Table -->
+      <section class="arch-section">
+        <div class="arch-table-header">
+          <h3>Subsystem Specification &amp; SWaP-C Breakdown</h3>
+          <span>Targeting Low-Cost Indigenous Manufacturing for YIL (Yantra India Limited)</span>
+        </div>
+        <div class="arch-table-container">
+          <table class="arch-table">
+            <thead>
+              <tr>
+                <th>Subsystem</th>
+                <th>Hardware / Component</th>
+                <th>Key Specifications</th>
+                <th>Environmental Standard</th>
+                <th>Cost / Sourcing</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Canard Actuation (CAA)</strong></td>
+                <td>4x Ti-6Al-4V Foldable Fins + Micro-BLDC Motors</td>
+                <td>±7.5° deflection, torque 1.2 Nm, step response &lt; 35 ms</td>
+                <td>16,500 g setback shock, MIL-STD-810H</td>
+                <td>Indigenous CNC Milling (YIL)</td>
+              </tr>
+              <tr>
+                <td><strong>Roll Decoupling</strong></td>
+                <td>Dual-Race Ceramic Bearing (Si₃N₄ Balls + 440C Races)</td>
+                <td>Isolates 250 Hz shell spin to &lt; 5 Hz at nose assembly</td>
+                <td>Grade 5 balls, dual labyrinth elastomer seal</td>
+                <td>Low-cost ceramic bearing tech</td>
+              </tr>
+              <tr>
+                <td><strong>Navigation Core</strong></td>
+                <td>High-G 6-DOF MEMS IMU + Anti-Jam GNSS</td>
+                <td>15-state EKF, 200 Hz update, drift nulling past apogee</td>
+                <td>Polyurethane potting (MIL-STD-331D)</td>
+                <td>COTS High-G Tactical MEMS</td>
+              </tr>
+              <tr>
+                <td><strong>Smart Sensor Suite</strong></td>
+                <td>24 GHz FMCW Radar + Digital Timer + Piezo Decel</td>
+                <td>Proximity HOB 2-15m, 1 ms digital timer, &gt; 800 g impact</td>
+                <td>Synthetic sapphire dome window (IOR 1.77)</td>
+                <td>Integrated RF Altimeter Module</td>
+              </tr>
+              <tr>
+                <td><strong>Power Supply</strong></td>
+                <td>Setback Thermal Battery + 8-Blade Ram-Air Turbine (RAT)</td>
+                <td>28V / 5V rails, 18 W peak draw, 90 s active mission life</td>
+                <td>Instantaneous g-activation at launch shock</td>
+                <td>Hermetic thermal reserve cell</td>
+              </tr>
+              <tr>
+                <td><strong>Total SWaP-C</strong></td>
+                <td><strong>Complete Guidance &amp; Sensor Module</strong></td>
+                <td><strong>Mass: 1.42 kg · Added length: 135 mm · Standard 2" thread</strong></td>
+                <td><strong>Operating: −46°C to +63°C, 16,800 g</strong></td>
+                <td><strong>Target Cost: ~$1,600 / kit</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </dialog>
+
+  <div id="hoverTag" class="hover-tag" role="tooltip"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js?v=3"></script>
+</body>
+</html>
